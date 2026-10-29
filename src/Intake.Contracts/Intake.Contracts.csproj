@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Apache.Avro" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Schemas\*.avsc" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

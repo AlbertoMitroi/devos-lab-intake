@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <PackageReference Include="MassTransit" />
+    <PackageReference Include="MassTransit.Kafka" />
+    <PackageReference Include="Confluent.SchemaRegistry.Serdes.Avro" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Intake.Contracts\Intake.Contracts.csproj" />
+  </ItemGroup>
+</Project>

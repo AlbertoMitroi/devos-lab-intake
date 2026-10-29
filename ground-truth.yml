@@ -1,0 +1,101 @@
+# Ground truth for lab-intake, written from its source only (no README, no engine output).
+# Each item: question, expected answer, file:line evidence. Any later change is logged with reason and evidence.
+repository: lab-intake
+sourceCommit: b371e9df68d8e72265b453768280e19042dd803d
+items:
+  - id: intake-projects
+    area: references
+    question: Which projects exist and how do they reference each other?
+    expected: Intake.Worker references Intake.Contracts; Intake.Worker.Tests tests the worker. No NuGet package is produced.
+    evidence:
+      - src/Intake.Worker/Intake.Worker.csproj:8
+
+  - id: intake-endpoint
+    area: http
+    question: Which HTTP endpoints does the worker expose?
+    expected:
+      - POST /intake/applications (validates, publishes two events, returns 202 Accepted with the application id)
+      - GET /health
+    evidence:
+      - src/Intake.Worker/Endpoints/ApplicationEndpoints.cs:14
+      - src/Intake.Worker/Endpoints/ApplicationEndpoints.cs:37
+      - src/Intake.Worker/Program.cs:13
+
+  - id: intake-kafka-producers
+    area: messaging
+    question: Which Kafka topics does the worker produce to, with which message type?
+    expected:
+      - "lease-applications-v1: Lab.Intake.Contracts.LeaseApplicationSubmitted, key = application id"
+      - "lease-application-enrichment-v1: Lab.Intake.Contracts.LeaseApplicationEnriched, key = application id"
+    transport: kafka
+    evidence:
+      - src/Intake.Worker/Publishing/KafkaExtensions.cs:28
+      - src/Intake.Worker/Publishing/KafkaExtensions.cs:31
+      - src/Intake.Worker/Publishing/IntakeKafkaOptions.cs:18
+      - src/Intake.Worker/Publishing/IntakeKafkaOptions.cs:20
+      - src/Intake.Worker/Publishing/KafkaApplicationPublisher.cs:12
+      - src/Intake.Worker/Publishing/KafkaApplicationPublisher.cs:15
+
+  - id: intake-topic-config
+    area: config
+    question: Where are the topic names configured?
+    expected: Configuration keys Kafka:Topics:Applications and Kafka:Topics:Enrichment (defaults in IntakeKafkaOptions equal the appsettings.json values).
+    evidence:
+      - src/Intake.Worker/Publishing/IntakeKafkaOptions.cs:5
+      - src/Intake.Worker/appsettings.json:14
+      - src/Intake.Worker/appsettings.json:15
+
+  - id: intake-publish-order
+    area: messaging
+    question: In which order does one request publish its events?
+    expected: First LeaseApplicationSubmitted, then LeaseApplicationEnriched (built by Enrichment.For).
+    evidence:
+      - src/Intake.Worker/Endpoints/ApplicationEndpoints.cs:22
+      - src/Intake.Worker/Endpoints/ApplicationEndpoints.cs:35
+      - src/Intake.Worker/Endpoints/ApplicationEndpoints.cs:45
+
+  - id: intake-transport
+    area: messaging
+    question: How is Kafka wired?
+    expected: MassTransit with the in-memory bus and a Kafka rider (UsingKafka with Kafka:BootstrapServers); values are serialized with the Confluent AvroSerializer and a schema registry client at Kafka:SchemaRegistryUrl.
+    evidence:
+      - src/Intake.Worker/Publishing/KafkaExtensions.cs:21
+      - src/Intake.Worker/Publishing/KafkaExtensions.cs:23
+      - src/Intake.Worker/Publishing/KafkaExtensions.cs:25
+      - src/Intake.Worker/Publishing/KafkaExtensions.cs:26
+      - src/Intake.Worker/Publishing/KafkaExtensions.cs:29
+      - src/Intake.Worker/Publishing/KafkaExtensions.cs:34
+
+  - id: intake-kafka-disabled
+    area: config
+    question: What happens when Kafka:Enabled is false?
+    expected: LoggingApplicationPublisher is registered instead of KafkaApplicationPublisher and no rider is configured; appsettings.Testing.json sets Enabled to false.
+    evidence:
+      - src/Intake.Worker/Publishing/KafkaExtensions.cs:14
+      - src/Intake.Worker/Publishing/KafkaExtensions.cs:16
+      - src/Intake.Worker/Publishing/KafkaExtensions.cs:38
+      - src/Intake.Worker/appsettings.Testing.json:3
+
+  - id: intake-avro-schemas
+    area: contracts
+    question: Which Avro schemas define the contracts, and which fields do they have?
+    expected:
+      - "Lab.Intake.Contracts.LeaseApplicationSubmitted: ApplicationId string, ApplicantName string, CompanyNumber string, AssetType string, AssetValue double, TermMonths int, SubmittedAtUnixMs long"
+      - "Lab.Intake.Contracts.LeaseApplicationEnriched: ApplicationId string, Sector string, YearsTrading int"
+    evidence:
+      - src/Intake.Contracts/Schemas/LeaseApplicationSubmitted.avsc:3
+      - src/Intake.Contracts/Schemas/LeaseApplicationEnriched.avsc:3
+      - src/Intake.Contracts/LeaseApplicationSubmitted.cs:7
+      - src/Intake.Contracts/LeaseApplicationEnriched.cs:7
+
+  - id: intake-config-keys
+    area: config
+    question: Which Kafka configuration keys exist per environment?
+    expected: Kafka:Enabled, Kafka:BootstrapServers, Kafka:SchemaRegistryUrl, Kafka:Topics:Applications, Kafka:Topics:Enrichment in appsettings.json; appsettings.Docker.json overrides BootstrapServers and SchemaRegistryUrl; appsettings.Testing.json overrides Enabled.
+    evidence:
+      - src/Intake.Worker/appsettings.json:10
+      - src/Intake.Worker/appsettings.json:11
+      - src/Intake.Worker/appsettings.json:12
+      - src/Intake.Worker/appsettings.Docker.json:3
+      - src/Intake.Worker/appsettings.Docker.json:4
+      - src/Intake.Worker/appsettings.Testing.json:3

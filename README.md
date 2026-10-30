@@ -17,3 +17,7 @@ Docker only:
 docker build --target test .
 docker build --target runtime -t lab-intake .
 ```
+
+## License
+
+MIT, see [LICENSE](LICENSE).

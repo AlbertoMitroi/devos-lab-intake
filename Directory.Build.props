@@ -7,7 +7,7 @@
     <Version Condition="'$(Version)' == ''">1.0.0</Version>
     <Authors>AlbertoMitroi</Authors>
     <Company>Lab</Company>
-    <RepositoryUrl>https://github.com/AlbertoMitroi/lab-intake</RepositoryUrl>
+    <RepositoryUrl>https://github.com/AlbertoMitroi/devos-lab-intake</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <IsPackable>false</IsPackable>
